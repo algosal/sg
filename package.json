@@ -1,0 +1,26 @@
+{
+  "name": "ag-cli",
+  "version": "1.0.0",
+  "description": "AG CLI Dev Environment",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "ag-cli": "bin/ag.js"
+  },
+  "scripts": {
+    "dev": "node run.js",
+    "build": "vite build --config template/ag.config.js",
+    "test": "echo \"No tests specified\""
+  },
+  "keywords": [],
+  "author": "Salman Saeed",
+  "license": "MIT",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.3",
+    "vite": "^7.2.7"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
