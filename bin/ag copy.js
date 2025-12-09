@@ -96,6 +96,7 @@ if (shortcut === "gc" || shortcut === "cc") {
   const COMPONENT_DIR = path.join(process.cwd(), "src/components", finalName);
   fs.mkdirSync(COMPONENT_DIR, { recursive: true });
 
+  // Main component
   const jsxContent = `import React from "react";
 import "./${finalName}.css";
 import ${finalName}JS from "./${finalName}JS";
@@ -114,6 +115,7 @@ export default ${finalName};
 
   fs.writeFileSync(path.join(COMPONENT_DIR, `${finalName}.jsx`), jsxContent);
 
+  // Child JS component
   const jsxChildContent = `import React from "react";
 
 const ${finalName}JS = () => {
@@ -132,6 +134,7 @@ export default ${finalName}JS;
     jsxChildContent
   );
 
+  // CSS
   const cssContent = `.${finalName.toLowerCase()}-container {
   border: 2px solid #ffd700;
   padding: 20px;
@@ -166,19 +169,35 @@ if (shortcut === "app") {
   const PROJECT_DIR = path.join(ROOT, finalName);
   const TEMPLATE_DIR = path.join(__dirname, "../template");
 
+  // 1️⃣ Create project folder
   fs.mkdirSync(PROJECT_DIR, { recursive: true });
 
-  // ✅ Ensure public folder exists with favicon, logo, manifest
+  // ✅ Ensure public folder exists with index.html, favicon.png, manifest.json
   const PUBLIC_DIR = path.join(PROJECT_DIR, "public");
   fs.mkdirSync(PUBLIC_DIR, { recursive: true });
-  ["favicon.png", "logo.png"].forEach((file) => {
-    // const srcPath = path.join(TEMPLATE_DIR, file);
-    const srcPath = path.join(TEMPLATE_DIR, "public", file);
 
-    const destPath = path.join(PUBLIC_DIR, file);
-    if (fs.existsSync(srcPath)) fs.copyFileSync(srcPath, destPath);
-    else console.warn(`⚠️ ${file} not found in template folder`);
-  });
+  // index.html
+  const indexHtmlContent = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>${finalName}</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="../template/src/main.jsx"></script>
+  </body>
+</html>
+`;
+  fs.writeFileSync(path.join(PUBLIC_DIR, "index.html"), indexHtmlContent);
+
+  // favicon.png
+  const faviconSrc = path.join(__dirname, "../template/favicon.png");
+  const faviconDest = path.join(PUBLIC_DIR, "favicon.png");
+  if (fs.existsSync(faviconSrc)) fs.copyFileSync(faviconSrc, faviconDest);
 
   // manifest.json
   const manifestContent = `{
@@ -191,26 +210,12 @@ if (shortcut === "app") {
 }`;
   fs.writeFileSync(path.join(PUBLIC_DIR, "manifest.json"), manifestContent);
 
-  // Copy index.html one folder up from public
-  const indexHtmlContent = `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="manifest" href="/manifest.json" />
-    <title>${finalName}</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="./src/main.jsx"></script>
-  </body>
-</html>`;
-  fs.writeFileSync(path.join(PROJECT_DIR, "index.html"), indexHtmlContent);
+  console.log(
+    "✅ Public folder with index.html, favicon.png, manifest.json created"
+  );
 
-  // Copy template recursively
+  // 2️⃣ Copy template recursively
   function copyRecursive(src, dest) {
-    if (!fs.existsSync(src)) return;
     const stat = fs.statSync(src);
     if (stat.isDirectory()) {
       fs.mkdirSync(dest, { recursive: true });
@@ -224,73 +229,12 @@ if (shortcut === "app") {
   }
   copyRecursive(TEMPLATE_DIR, PROJECT_DIR);
 
-  // Ensure src folder exists
+  // 3️⃣ Add default App.css
   const srcDir = path.join(PROJECT_DIR, "src");
   fs.mkdirSync(srcDir, { recursive: true });
-
-  // main.jsx
-  const mainJsxPath = path.join(srcDir, "main.jsx");
-  if (!fs.existsSync(mainJsxPath)) {
-    const mainJsxContent = `import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App.jsx";
-import "./App.css";
-
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);`;
-    fs.writeFileSync(mainJsxPath, mainJsxContent);
-  }
-
-  // App.jsx
-  const appJsxPath = path.join(srcDir, "App.jsx");
-  if (!fs.existsSync(appJsxPath)) {
-    const appJsxContent = `import React from "react";
-import "./App.css";
-import Logo from "./logo.png";
-
-const App = () => {
-  return (
-    <div className="app-container">
-      <img src={Logo} alt="App Logo" className="app-logo" />
-      <h1>Welcome to ${finalName}</h1>
-      <p>Your AG App is ready!</p>
-   
-   <p>
-  Powered by{" "}
-  <a
-    href="https://consciousneurons.com"
-    target="_blank"
-    rel="noopener noreferrer"
-    onClick={(e) => e.stopPropagation()}
-  >
-    Conscious Neurons LLC
-  </a>
-  {" "} | Sponsored by{" "}
-  <a
-    href="https://albagoldsystems.com"
-    target="_blank"
-    rel="noopener noreferrer"
-    onClick={(e) => e.stopPropagation()}
-  >
-    Alba Gold
-  </a>
-</p>
-
-    </div>
-  );
-};
-
-export default App;`;
-    fs.writeFileSync(appJsxPath, appJsxContent);
-  }
-
-  // App.css
   const cssPath = path.join(srcDir, "App.css");
-  if (!fs.existsSync(cssPath)) {
-    const defaultCss = `body {
+  const defaultCss = `/* Default app styling with logo */
+body {
   margin: 0;
   font-family: 'Inter', sans-serif;
   background-color: #0a0f24;
@@ -304,7 +248,6 @@ a { color: #ffd700; text-decoration: none; }
   height: auto;
   margin: 20px auto;
   display: block;
-  animation: rotateY 5s linear infinite;
 }
 
 .app-container {
@@ -314,16 +257,71 @@ a { color: #ffd700; text-decoration: none; }
   justify-content: flex-start;
   padding: 20px;
 }
-
-@keyframes rotateY {
+  @keyframes rotateY {
   0% { transform: rotateY(0deg); }
   50% { transform: rotateY(180deg); }
   100% { transform: rotateY(360deg); }
-}`;
-    fs.writeFileSync(cssPath, defaultCss);
-  }
+}
 
-  // package.json
+.app-logo {
+  width: 120px;
+  height: auto;
+  margin: 20px auto;
+  display: block;
+  animation: rotateY 5s linear infinite;
+}
+
+`;
+  fs.writeFileSync(cssPath, defaultCss);
+  console.log("✅ Default App.css added");
+
+  // 4️⃣ Create App.jsx
+  const appJsxPath = path.join(srcDir, "App.jsx");
+  const appJsxContent = `/**
+* AG App generated by Conscious Neurons LLC
+* Website: https://consciousneurons.com
+* Sponsored by Alba Gold Systems: https://albagoldsystems.com
+* Follows Vite + React best practices with Angular-style structure
+*/
+import React from "react";
+import "./App.css";
+import Logo from "./logo.png"; // place your logo.png in src folder
+
+const App = () => {
+  return (
+    <div className="app-container">
+      <img src={Logo} alt="App Logo" className="app-logo" />
+      <h1>Welcome to ${finalName}</h1>
+      <p>Your AG App is ready!</p>
+     <p>
+  Powered by{" "}
+  <a
+    href="https://consciousneurons.com"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    Conscious Neurons LLC
+  </a>{" "}
+  | Sponsored by{" "}
+  <a
+    href="https://albagoldsystems.com"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    Alba Gold
+  </a>
+</p>
+
+    </div>
+  );
+};
+
+export default App;
+`;
+  fs.writeFileSync(appJsxPath, appJsxContent);
+  console.log("✅ App.jsx created with logo support");
+
+  // 5️⃣ package.json
   const pkg = {
     name: finalName,
     version: "1.0.0",
@@ -343,18 +341,18 @@ a { color: #ffd700; text-decoration: none; }
     JSON.stringify(pkg, null, 2)
   );
 
-  // Automatically install dependencies
-  console.log("\n📦 Installing dependencies...");
+  // 6️⃣ Automatically install dependencies
+  console.log("\n📦 Installing dependencies... (this may take a minute)");
   try {
     execSync("npm install", { stdio: "inherit", cwd: PROJECT_DIR });
-    console.log("✅ Dependencies installed successfully!");
+    console.log("\n✅ Dependencies installed successfully!");
   } catch (err) {
     console.error(
-      "❌ Failed to install dependencies. Run 'npm install' manually."
+      "❌ Failed to install dependencies. Please run 'npm install' manually."
     );
   }
 
-  // run.js
+  // 7️⃣ run.js
   const runJsContent = `#!/usr/bin/env node
 import { spawn } from "child_process";
 import path from "path";
@@ -374,7 +372,7 @@ Built by Salman Saeed
 \`);
 
 const configPath = path.resolve("./ag.config.js");
-const vite = spawn("npx", ["vite", "--config", configPath, "--port", "4321"], { stdio: "pipe" });
+const vite = spawn("npx", ["vite", "--config", configPath], { stdio: "pipe" });
 
 vite.stdout.on("data", (data) => {
   const str = data.toString();
@@ -390,6 +388,7 @@ vite.on("close", (code) => {
 `;
   fs.writeFileSync(path.join(PROJECT_DIR, "run.js"), runJsContent);
 
+  // 8️⃣ Done
   console.log("\n🎉 Project created successfully!");
   console.log(`cd ${finalName}`);
   console.log("npm run ag   # or npm start / npm run dev to launch the app");

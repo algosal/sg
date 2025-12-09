@@ -2,7 +2,6 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { execSync } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,7 +57,7 @@ if (
 }
 
 // =====================
-// Handle Service creation
+// Service creation
 // =====================
 if (shortcut === "svc") {
   const servicePath = path.join(
@@ -76,7 +75,7 @@ if (shortcut === "svc") {
 }
 
 // =====================
-// Handle Context creation
+// Context creation
 // =====================
 if (shortcut === "ctx") {
   const ctxPath = path.join(process.cwd(), "src/contexts", `${finalName}.js`);
@@ -90,11 +89,11 @@ if (shortcut === "ctx") {
 }
 
 // =====================
-// Handle Component creation (gc, cc)
+// Component creation (gc, cc)
 // =====================
 if (shortcut === "gc" || shortcut === "cc") {
-  const COMPONENT_DIR = path.join(process.cwd(), "src/components", finalName);
-  fs.mkdirSync(COMPONENT_DIR, { recursive: true });
+  const componentDir = path.join(process.cwd(), "src/components", finalName);
+  fs.mkdirSync(componentDir, { recursive: true });
 
   const jsxContent = `import React from "react";
 import "./${finalName}.css";
@@ -112,9 +111,7 @@ const ${finalName} = () => {
 export default ${finalName};
 `;
 
-  fs.writeFileSync(path.join(COMPONENT_DIR, `${finalName}.jsx`), jsxContent);
-
-  const jsxChildContent = `import React from "react";
+  const childJsx = `import React from "react";
 
 const ${finalName}JS = () => {
   return (
@@ -126,11 +123,6 @@ const ${finalName}JS = () => {
 
 export default ${finalName}JS;
 `;
-
-  fs.writeFileSync(
-    path.join(COMPONENT_DIR, `${finalName}JS.jsx`),
-    jsxChildContent
-  );
 
   const cssContent = `.${finalName.toLowerCase()}-container {
   border: 2px solid #ffd700;
@@ -150,16 +142,16 @@ export default ${finalName}JS;
 }
 `;
 
-  fs.writeFileSync(path.join(COMPONENT_DIR, `${finalName}.css`), cssContent);
+  fs.writeFileSync(path.join(componentDir, `${finalName}.jsx`), jsxContent);
+  fs.writeFileSync(path.join(componentDir, `${finalName}JS.jsx`), childJsx);
+  fs.writeFileSync(path.join(componentDir, `${finalName}.css`), cssContent);
 
-  console.log(
-    `✅ Component '${finalName}' created at src/components/${finalName}`
-  );
+  console.log(`✅ Component created at src/components/${finalName}`);
   process.exit(0);
 }
 
 // =====================
-// Handle App creation
+// App creation
 // =====================
 if (shortcut === "app") {
   const ROOT = process.cwd();
@@ -168,47 +160,6 @@ if (shortcut === "app") {
 
   fs.mkdirSync(PROJECT_DIR, { recursive: true });
 
-  // ✅ Ensure public folder exists with favicon, logo, manifest
-  const PUBLIC_DIR = path.join(PROJECT_DIR, "public");
-  fs.mkdirSync(PUBLIC_DIR, { recursive: true });
-  ["favicon.png", "logo.png"].forEach((file) => {
-    // const srcPath = path.join(TEMPLATE_DIR, file);
-    const srcPath = path.join(TEMPLATE_DIR, "public", file);
-
-    const destPath = path.join(PUBLIC_DIR, file);
-    if (fs.existsSync(srcPath)) fs.copyFileSync(srcPath, destPath);
-    else console.warn(`⚠️ ${file} not found in template folder`);
-  });
-
-  // manifest.json
-  const manifestContent = `{
-  "name": "${finalName}",
-  "short_name": "${finalName}",
-  "start_url": ".",
-  "display": "standalone",
-  "background_color": "#0a0f24",
-  "theme_color": "#ffd700"
-}`;
-  fs.writeFileSync(path.join(PUBLIC_DIR, "manifest.json"), manifestContent);
-
-  // Copy index.html one folder up from public
-  const indexHtmlContent = `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="manifest" href="/manifest.json" />
-    <title>${finalName}</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="./src/main.jsx"></script>
-  </body>
-</html>`;
-  fs.writeFileSync(path.join(PROJECT_DIR, "index.html"), indexHtmlContent);
-
-  // Copy template recursively
   function copyRecursive(src, dest) {
     if (!fs.existsSync(src)) return;
     const stat = fs.statSync(src);
@@ -222,16 +173,51 @@ if (shortcut === "app") {
       fs.copyFileSync(src, dest);
     }
   }
+
   copyRecursive(TEMPLATE_DIR, PROJECT_DIR);
 
-  // Ensure src folder exists
+  const PUBLIC_DIR = path.join(PROJECT_DIR, "public");
+  if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+
+  // manifest.json
+  fs.writeFileSync(
+    path.join(PUBLIC_DIR, "manifest.json"),
+    `{
+  "name": "${finalName}",
+  "short_name": "${finalName}",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0a0f24",
+  "theme_color": "#ffd700"
+}`
+  );
+
+  // index.html
+  fs.writeFileSync(
+    path.join(PUBLIC_DIR, "index.html"),
+    `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>${finalName}</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./src/main.jsx"></script>
+  </body>
+</html>`
+  );
+
   const srcDir = path.join(PROJECT_DIR, "src");
   fs.mkdirSync(srcDir, { recursive: true });
 
   // main.jsx
-  const mainJsxPath = path.join(srcDir, "main.jsx");
-  if (!fs.existsSync(mainJsxPath)) {
-    const mainJsxContent = `import React from "react";
+  fs.writeFileSync(
+    path.join(srcDir, "main.jsx"),
+    `import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./App.css";
@@ -240,57 +226,32 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
-);`;
-    fs.writeFileSync(mainJsxPath, mainJsxContent);
-  }
+);`
+  );
 
   // App.jsx
-  const appJsxPath = path.join(srcDir, "App.jsx");
-  if (!fs.existsSync(appJsxPath)) {
-    const appJsxContent = `import React from "react";
+  fs.writeFileSync(
+    path.join(srcDir, "App.jsx"),
+    `import React from "react";
 import "./App.css";
-import Logo from "./logo.png";
 
 const App = () => {
   return (
     <div className="app-container">
-      <img src={Logo} alt="App Logo" className="app-logo" />
+      <img src="/logo.png" alt="App Logo" className="app-logo" />
       <h1>Welcome to ${finalName}</h1>
       <p>Your AG App is ready!</p>
-   
-   <p>
-  Powered by{" "}
-  <a
-    href="https://consciousneurons.com"
-    target="_blank"
-    rel="noopener noreferrer"
-    onClick={(e) => e.stopPropagation()}
-  >
-    Conscious Neurons LLC
-  </a>
-  {" "} | Sponsored by{" "}
-  <a
-    href="https://albagoldsystems.com"
-    target="_blank"
-    rel="noopener noreferrer"
-    onClick={(e) => e.stopPropagation()}
-  >
-    Alba Gold
-  </a>
-</p>
-
     </div>
   );
 };
 
-export default App;`;
-    fs.writeFileSync(appJsxPath, appJsxContent);
-  }
+export default App;`
+  );
 
   // App.css
-  const cssPath = path.join(srcDir, "App.css");
-  if (!fs.existsSync(cssPath)) {
-    const defaultCss = `body {
+  fs.writeFileSync(
+    path.join(srcDir, "App.css"),
+    `body {
   margin: 0;
   font-family: 'Inter', sans-serif;
   background-color: #0a0f24;
@@ -319,9 +280,8 @@ a { color: #ffd700; text-decoration: none; }
   0% { transform: rotateY(0deg); }
   50% { transform: rotateY(180deg); }
   100% { transform: rotateY(360deg); }
-}`;
-    fs.writeFileSync(cssPath, defaultCss);
-  }
+}`
+  );
 
   // package.json
   const pkg = {
@@ -333,7 +293,7 @@ a { color: #ffd700; text-decoration: none; }
       start: "node run.js",
       ag: "node run.js",
       build: "vite build",
-      preview: "vite preview",
+      preview: "vite preview --port 4321",
     },
     dependencies: { react: "^18.3.1", "react-dom": "^18.3.1" },
     devDependencies: { vite: "^7.2.7", "@vitejs/plugin-react": "^4.3.3" },
@@ -343,18 +303,7 @@ a { color: #ffd700; text-decoration: none; }
     JSON.stringify(pkg, null, 2)
   );
 
-  // Automatically install dependencies
-  console.log("\n📦 Installing dependencies...");
-  try {
-    execSync("npm install", { stdio: "inherit", cwd: PROJECT_DIR });
-    console.log("✅ Dependencies installed successfully!");
-  } catch (err) {
-    console.error(
-      "❌ Failed to install dependencies. Run 'npm install' manually."
-    );
-  }
-
-  // run.js
+  // run.js with banner
   const runJsContent = `#!/usr/bin/env node
 import { spawn } from "child_process";
 import path from "path";
@@ -370,7 +319,7 @@ console.log(\`
 🚀 AG CLI - Powered by Conscious Neurons LLC
 https://consciousneurons.com
 Built by Salman Saeed
-🔹 Starting your AG App...
+🔹 Starting your AG App on port 4321...
 \`);
 
 const configPath = path.resolve("./ag.config.js");
@@ -392,7 +341,8 @@ vite.on("close", (code) => {
 
   console.log("\n🎉 Project created successfully!");
   console.log(`cd ${finalName}`);
-  console.log("npm run ag   # or npm start / npm run dev to launch the app");
-  console.log("npm run build  # to build the project");
-  console.log("npm run preview  # to preview the build");
+  console.log("npm install   # install dependencies manually");
+  console.log("npm run ag    # launch app");
+  console.log("npm run build # build the app");
+  console.log("npm run preview # preview on port 4321");
 }

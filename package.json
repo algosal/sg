@@ -1,19 +1,24 @@
 {
   "name": "ag-cli",
   "version": "1.0.0",
-  "description": "AG CLI for scaffolding React projects, components, services, contexts",
+  "description": "AG CLI for scaffolding React projects, components, services, and contexts",
   "bin": {
     "ag": "./bin/ag.js"
   },
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "start": "node ./bin/ag.js"
+  },
   "keywords": [
     "cli",
     "scaffold",
     "react",
-    "vite"
+    "vite",
+    "components",
+    "contexts",
+    "services"
   ],
-  "author": "Salman Saeed",
+  "author": "Salman Saeed, Conscious Neurons LLC",
   "license": "MIT",
   "dependencies": {}
 }
