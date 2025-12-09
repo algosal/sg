@@ -1,6 +1,6 @@
 {
   "name": "@salmansaeed/ag-cli",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "description": "AG CLI for scaffolding React projects, components, services, and contexts",
   "bin": {
     "ag": "bin/ag.js"
