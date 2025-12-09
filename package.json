@@ -1,9 +1,9 @@
 {
-  "name": "ag-cli",
-  "version": "1.0.0",
+  "name": "@salmansaeed/ag-cli",
+  "version": "1.0.20",
   "description": "AG CLI for scaffolding React projects, components, services, and contexts",
   "bin": {
-    "ag": "./bin/ag.js"
+    "ag": "bin/ag.js"
   },
   "type": "module",
   "scripts": {
@@ -20,5 +20,8 @@
   ],
   "author": "Salman Saeed, Conscious Neurons LLC",
   "license": "MIT",
-  "dependencies": {}
+  "dependencies": {},
+  "engines": {
+    "node": ">=18"
+  }
 }
