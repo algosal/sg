@@ -1,121 +1,134 @@
 #!/usr/bin/env node
-
 import fs from "fs";
 import path from "path";
-import { execSync } from "child_process";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const args = process.argv.slice(2);
+const command = args[0]; // "new"
+const shortcut = args[1]; // "gc", "cc", "svc", "ctx"
+const name = args[2]; // custom project/component name
 
-if (args.length < 2) {
-  console.log("Usage: ag <command> <name>");
+if (!command || !shortcut) {
+  console.log("Usage: node ag.js new <gc|cc|svc|ctx> [Name]");
   process.exit(1);
 }
 
-const command = args[0];
-const name = args[1];
-
-// Paths
-const projectPath = path.join(process.cwd(), name);
-
-const createProject = () => {
-  console.log(`Creating new project: ${name}`);
-  fs.cpSync(path.join(__dirname, "../template"), projectPath, {
-    recursive: true,
-  });
-  console.log("Installing dependencies...");
-  execSync("npm install", { cwd: projectPath, stdio: "inherit" });
-  console.log("✔ Project created!");
+// Shortcuts mapping
+const SHORTCUTS = {
+  gc: "MyGameProject",
+  cc: "MyCommerceProject",
+  svc: "MyService",
+  ctx: "MyContext",
 };
 
-const createComponent = () => {
-  const compPath = path.join(process.cwd(), "src/components", name);
-  if (!fs.existsSync(compPath)) fs.mkdirSync(compPath, { recursive: true });
+// Resolve final name
+const finalName = name || SHORTCUTS[shortcut];
 
-  fs.writeFileSync(
-    path.join(compPath, `${name}.jsx`),
-    `import React from 'react';
-import './${name}.css';
-
-const ${name} = () => {
-  return <div>${name} component</div>;
-};
-
-export default ${name};
-`
+// Handle service/context creation
+if (shortcut === "svc") {
+  const servicePath = path.join(
+    process.cwd(),
+    "src/services",
+    `${finalName}.js`
   );
+  fs.mkdirSync(path.dirname(servicePath), { recursive: true });
   fs.writeFileSync(
-    path.join(compPath, `${name}JS.js`),
-    `// Logic for ${name} component
-`
+    servicePath,
+    `// Service: ${finalName}\n\nexport default function ${finalName}() {\n  return null;\n}\n`
   );
+  console.log(`✅ Service created at src/services/${finalName}.js`);
+  process.exit(0);
+}
+
+if (shortcut === "ctx") {
+  const ctxPath = path.join(process.cwd(), "src/contexts", `${finalName}.js`);
+  fs.mkdirSync(path.dirname(ctxPath), { recursive: true });
   fs.writeFileSync(
-    path.join(compPath, `${name}.css`),
-    `/* Styles for ${name} component */
-`
+    ctxPath,
+    `// Context: ${finalName}\n\nimport { createContext } from 'react';\nexport const ${finalName} = createContext(null);\n`
   );
-  console.log(`✔ Component ${name} created at src/components/${name}/`);
-};
+  console.log(`✅ Context created at src/contexts/${finalName}.js`);
+  process.exit(0);
+}
 
-const createContext = () => {
-  const ctxPath = path.join(process.cwd(), "src/contexts");
-  if (!fs.existsSync(ctxPath)) fs.mkdirSync(ctxPath, { recursive: true });
+// Otherwise, fallback to full project creation
+const ROOT = process.cwd();
+const PROJECT_DIR = path.join(ROOT, finalName);
+const TEMPLATE_DIR = path.join(__dirname, "../template");
 
-  fs.writeFileSync(
-    path.join(ctxPath, `${name}.js`),
-    `import { createContext, useState } from 'react';
+// 1️⃣ Create project folder
+fs.mkdirSync(PROJECT_DIR, { recursive: true });
 
-export const ${name} = createContext();
-
-export const ${name}Provider = ({ children }) => {
-  const [state, setState] = useState(null);
-
-  return (
-    <${name}.Provider value={{ state, setState }}>
-      {children}
-    </${name}.Provider>
-  );
-};
-`
-  );
-  console.log(`✔ Context ${name} created at src/contexts/`);
-};
-
-const createService = () => {
-  const srvPath = path.join(process.cwd(), "src/services");
-  if (!fs.existsSync(srvPath)) fs.mkdirSync(srvPath, { recursive: true });
-
-  fs.writeFileSync(
-    path.join(srvPath, `${name}.js`),
-    `class ${name} {
-  async fetchSomething() {
-    // API call
+// 2️⃣ Copy template recursively (excluding node_modules)
+function copyRecursive(src, dest) {
+  const stat = fs.statSync(src);
+  if (stat.isDirectory()) {
+    fs.mkdirSync(dest, { recursive: true });
+    for (const item of fs.readdirSync(src)) {
+      if (item === "node_modules") continue;
+      copyRecursive(path.join(src, item), path.join(dest, item));
+    }
+  } else {
+    fs.copyFileSync(src, dest);
   }
 }
+copyRecursive(TEMPLATE_DIR, PROJECT_DIR);
 
-export default new ${name}();
-`
-  );
-  console.log(`✔ Service ${name} created at src/services/`);
+// 3️⃣ Create package.json
+const pkg = {
+  name: finalName,
+  version: "1.0.0",
+  type: "module",
+  scripts: { dev: "node run.js" },
+  dependencies: { react: "^18.3.1", "react-dom": "^18.3.1" },
+  devDependencies: { vite: "^7.2.7", "@vitejs/plugin-react": "^4.3.3" },
 };
+fs.writeFileSync(
+  path.join(PROJECT_DIR, "package.json"),
+  JSON.stringify(pkg, null, 2)
+);
 
-switch (command) {
-  case "new":
-    createProject();
-    break;
-  case "nc":
-    createComponent();
-    break;
-  case "cc":
-    createContext();
-    break;
-  case "cs":
-    createService();
-    break;
-  default:
-    console.log("Unknown command");
-    break;
-}
+// 4️⃣ Generate run.js dynamically
+const runJsContent = `#!/usr/bin/env node
+import { spawn } from "child_process";
+import path from "path";
+
+console.log(\`
+ █████╗  ██████╗
+██╔══██╗██╔═══██╗
+███████║██║   
+██╔══██║██║ █║██║
+██║  ██║╚██████╔╝
+╚═╝  ╚═╝ ╚═════╝
+
+🚀 AG CLI - Powered by Conscious Neurons LLC
+https://consciousneurons.com
+Built by Salman Saeed
+🔹 Starting your AG App...
+\`);
+
+const configPath = path.resolve("./ag.config.js");
+const vite = spawn("npx", ["vite", "--config", configPath], { stdio: "pipe" });
+
+vite.stdout.on("data", (data) => {
+  const str = data.toString();
+  if (!str.includes("VITE")) console.log(str);
+});
+
+vite.stderr.on("data", (data) => process.stderr.write(data));
+
+vite.on("close", (code) => {
+  console.log(\`\\n✅ AG App stopped (exit code \${code})\`);
+  process.exit(code);
+});
+`;
+
+fs.writeFileSync(path.join(PROJECT_DIR, "run.js"), runJsContent);
+
+console.log("✔ Project created!");
+console.log(`cd ${finalName}`);
+console.log("npm install");
+console.log("npm run dev");

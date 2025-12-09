@@ -1,26 +1,19 @@
 {
   "name": "ag-cli",
   "version": "1.0.0",
-  "description": "AG CLI Dev Environment",
-  "main": "index.js",
-  "type": "module",
+  "description": "AG CLI for scaffolding React projects, components, services, contexts",
   "bin": {
-    "ag-cli": "bin/ag.js"
+    "ag": "./bin/ag.js"
   },
-  "scripts": {
-    "dev": "node run.js",
-    "build": "vite build --config template/ag.config.js",
-    "test": "echo \"No tests specified\""
-  },
-  "keywords": [],
+  "type": "module",
+  "scripts": {},
+  "keywords": [
+    "cli",
+    "scaffold",
+    "react",
+    "vite"
+  ],
   "author": "Salman Saeed",
   "license": "MIT",
-  "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.3",
-    "vite": "^7.2.7"
-  },
-  "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  }
+  "dependencies": {}
 }
