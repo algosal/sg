@@ -17,7 +17,7 @@ SG CLI comes with built-in navigation and project scaffolding, reducing setup ov
 ## Installation
 
 ```bash
-npm install -g sg@latest
+npx --verbose @salmansaeed/sg@latest new <AppName>
 ```
 
 ---
@@ -76,8 +76,10 @@ For more information, visit **Conscious Neurons LLC**: [https://consciousneurons
 
 ✅ The key change is:
 
-```bash
-npm install -g sg@latest
+````bash
+
+npx --verbose @salmansaeed/sg@latest new <AppName>
 ```
 
 so users always get the most recent version.
+````
