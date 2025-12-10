@@ -1,6 +1,6 @@
 {
   "name": "@salmansaeed/sg",
-  "version": "1.0.5",
+  "version": "1.0.7",
   "description": "SG CLI for scaffolding React projects, components, services, and contexts",
   "bin": {
     "sg": "bin/sg.js"
