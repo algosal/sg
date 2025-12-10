@@ -20,6 +20,8 @@ SG CLI comes with built-in navigation and project scaffolding, reducing setup ov
 npm install -g sg-cli@latest
 ```
 
+salman
+
 ---
 
 ## Core Commands
