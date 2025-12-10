@@ -76,10 +76,9 @@ For more information, visit **Conscious Neurons LLC**: [https://consciousneurons
 
 ✅ The key change is:
 
-````bash
+```bash
 
 npx --verbose @salmansaeed/sg@latest new <AppName>
-```
 
 so users always get the most recent version.
-````
+```
