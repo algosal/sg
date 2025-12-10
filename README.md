@@ -20,8 +20,6 @@ SG CLI comes with built-in navigation and project scaffolding, reducing setup ov
 npm install -g sg-cli@latest
 ```
 
-salman
-
 ---
 
 ## Core Commands
@@ -76,12 +74,10 @@ For more information, visit **Conscious Neurons LLC**: [https://consciousneurons
 
 **AG App**: [https://alba.gold](https://alba.gold)
 
-````
-
 ✅ The key change is:
 
 ```bash
 npm install -g sg-cli@latest
-````
+```
 
 so users always get the most recent version.
