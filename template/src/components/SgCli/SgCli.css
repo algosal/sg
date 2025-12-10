@@ -1,0 +1,82 @@
+.sgcli-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #121212;
+  color: #eee;
+}
+
+.sgcli-header {
+  position: fixed;
+  top: 0;
+  left: 220px;
+  right: 0;
+  height: 80px;
+  background-color: #121212;
+  color: #ffd700;
+  display: flex;
+  align-items: center;
+  font-size: 2rem;
+  font-weight: bold;
+  padding: 0 30px;
+  border-bottom: 1px solid #333;
+  z-index: 100;
+  box-sizing: border-box;
+}
+
+.sgcli-content {
+  margin-left: 220px;
+  padding: 100px 40px 40px 40px;
+  max-width: 900px;
+}
+
+.sgcli-section {
+  margin-bottom: 40px;
+}
+
+.sgcli-section-title {
+  font-size: 1.5rem;
+  color: #ffd700;
+  margin-bottom: 10px;
+}
+
+.sgcli-text {
+  font-size: 1rem;
+  line-height: 1.8;
+  margin-top: 5px;
+}
+
+.sgcli-code {
+  background-color: #1a1a1a;
+  padding: 10px 15px;
+  border-radius: 6px;
+  display: block;
+  overflow-x: auto;
+  font-family: monospace;
+  margin-top: 10px;
+}
+
+.sgcli-list {
+  list-style-type: disc;
+  margin-left: 20px;
+}
+
+.sgcli-list li {
+  margin-bottom: 8px;
+}
+
+/* Responsive for mobile */
+@media (max-width: 768px) {
+  .sgcli-header {
+    left: 0;
+    right: 0;
+    height: 60px;
+    padding: 0 15px;
+  }
+
+  .sgcli-content {
+    margin-left: 0;
+    padding: 80px 15px 20px 15px;
+  }
+}

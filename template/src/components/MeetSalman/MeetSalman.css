@@ -1,0 +1,161 @@
+/* MeetSalman.css */
+
+.meet-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #121212;
+  color: #eee;
+}
+
+.meet-header {
+  position: fixed;
+  top: 0;
+  left: 220px;
+  right: 0;
+  background-color: #121212;
+  color: #ffcc00;
+  border-bottom: 1px solid #333;
+  padding: 15px 30px;
+  font-size: 2.5rem;
+  font-weight: bold;
+  z-index: 150;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  direction: ltr; /* English-to-Arabic alignment */
+}
+
+.meet-arabicName {
+  font-size: 3.5rem;
+  color: #ffcc00;
+  font-weight: 400;
+  font-family: "Amiri", serif;
+  direction: rtl;
+  text-align: right;
+}
+
+.meet-content {
+  flex-grow: 1;
+  padding: 30px;
+  margin-left: 220px;
+  margin-top: 80px;
+}
+
+.meet-content-flex {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.meet-paragraph {
+  max-width: 600px;
+  line-height: 1.8;
+  margin-top: 30px;
+  text-indent: 2em;
+  text-align: justify;
+}
+
+.meet-lastParagraph {
+  margin-top: 40px;
+  font-style: italic;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  text-align: justify;
+  text-indent: 2em;
+  width: 100%;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 20px;
+}
+
+.meet-footer {
+  margin-top: 60px;
+  text-align: center;
+  font-size: 1rem;
+  color: #aaa;
+}
+
+.meet-imageContainer {
+  display: flex;
+  align-items: center;
+}
+
+.meet-image {
+  max-width: 600px;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+/* Responsive styles */
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none !important;
+  }
+
+  .meet-header {
+    position: fixed !important;
+    top: 50px !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    padding: 10px 20px !important;
+    font-size: 1.8rem !important;
+    border-bottom: 1px solid #333 !important;
+    z-index: 1500 !important;
+    height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    box-sizing: border-box !important;
+  }
+
+  .meet-header span {
+    font-size: 1.8rem !important;
+    margin-left: 0 !important;
+    margin-top: 5px !important;
+  }
+
+  .header-right {
+    align-self: flex-end;
+    font-family: "Amiri", serif;
+    color: #ffcc00;
+    direction: rtl;
+    text-align: right;
+    margin-top: 4px;
+  }
+
+  .header-left {
+    display: none;
+  }
+
+  .meet-content {
+    margin-left: 0 !important;
+    margin-top: 120px !important;
+    padding: 20px 15px !important;
+  }
+
+  .meet-content-flex {
+    flex-direction: column;
+    align-items: center !important;
+    text-align: center;
+  }
+
+  .meet-content-flex img {
+    margin-top: 20px;
+    max-width: 280px !important;
+  }
+
+  .meet-content-flex p {
+    margin-top: 20px;
+  }
+}

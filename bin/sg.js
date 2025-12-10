@@ -13,7 +13,7 @@ const shortcut = args[1]; // "gc", "cc", "svc", "ctx", or "app"
 const name = args[2]; // custom project/component name
 
 if (!command || !shortcut) {
-  console.log("Usage: ag new <app|gc|cc|svc|ctx> [Name]");
+  console.log("Usage: sg new <app|gc|cc|svc|ctx> [Name]");
   process.exit(1);
 }
 
@@ -48,7 +48,7 @@ if (
   finalName = toPascalCase(name || SHORTCUTS[shortcut]);
 } else if (shortcut === "app") {
   if (!name) {
-    console.log("Please provide a name for the app: ag new app MyApp");
+    console.log("Please provide a name for the app: sg new app MyApp");
     process.exit(1);
   }
   finalName = toPascalCase(name);
@@ -250,13 +250,16 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     const appJsxContent = `import React from "react";
 import "./App.css";
 import Logo from "./logo.png";
+import Navbar from "./components/Navbar/Navbar";
+
 
 const App = () => {
   return (
     <div className="app-container">
+    <Navbar />
       <img src={Logo} alt="App Logo" className="app-logo" />
       <h1>Welcome to ${finalName}</h1>
-      <p>Your AG App is ready!</p>
+      <p>Your SG App is ready!</p>
    
    <p>
   Powered by{" "}
@@ -331,11 +334,15 @@ a { color: #ffd700; text-decoration: none; }
     scripts: {
       dev: "node run.js",
       start: "node run.js",
-      ag: "node run.js",
+      sg: "node run.js",
       build: "vite build",
       preview: "vite preview",
     },
-    dependencies: { react: "^18.3.1", "react-dom": "^18.3.1" },
+    dependencies: {
+      react: "^18.3.1",
+      "react-dom": "^18.3.1",
+      "react-router-dom": "^6.15.0",
+    },
     devDependencies: { vite: "^7.2.7", "@vitejs/plugin-react": "^4.3.3" },
   };
   fs.writeFileSync(
@@ -355,17 +362,52 @@ a { color: #ffd700; text-decoration: none; }
   }
 
   // run.js
+  //   const runJsContent = `#!/usr/bin/env node
+  // import { spawn } from "child_process";
+  // import path from "path";
+
+  // console.log(\`
+  //   ███████╗ ██████╗
+  // ██╔════╝ ██╔═══██╗
+  // ███████╗ ██║
+  // ╚════██║ ██║ █ ██║
+  // ███████║ ╚██████╔╝
+  // ╚══════╝  ╚═════╝
+
+  // 🚀 AG CLI - Powered by Conscious Neurons LLC
+  // https://consciousneurons.com
+  // Built by Salman Saeed
+  // 🔹 Starting your AG App...
+  // \`);
+
+  // const configPath = path.resolve("./ag.config.js");
+  // const vite = spawn("npx", ["vite", "--config", configPath, "--port", "4321"], { stdio: "pipe" });
+
+  // vite.stdout.on("data", (data) => {
+  //   const str = data.toString();
+  //   if (!str.includes("VITE")) console.log(str);
+  // });
+
+  // vite.stderr.on("data", (data) => process.stderr.write(data));
+
+  // vite.on("close", (code) => {
+  //   console.log(\`\\n✅ AG App stopped (exit code \${code})\`);
+  //   process.exit(code);
+  // });
+  // `;
   const runJsContent = `#!/usr/bin/env node
 import { spawn } from "child_process";
 import path from "path";
+import os from "os";
 
 console.log(\`
- █████╗  ██████╗
-██╔══██╗██╔═══██╗
-███████║██║   
-██╔══██║██║ █║██║
-██║  ██║╚██████╔╝
-╚═╝  ╚═╝ ╚═════╝
+  ███████╗ ██████╗
+██╔════╝ ██╔═══██╗
+███████╗ ██║   
+╚════██║ ██║ █ ██║
+███████║ ╚██████╔╝
+╚══════╝  ╚═════╝
+
 
 🚀 AG CLI - Powered by Conscious Neurons LLC
 https://consciousneurons.com
@@ -373,8 +415,25 @@ Built by Salman Saeed
 🔹 Starting your AG App...
 \`);
 
-const configPath = path.resolve("./ag.config.js");
-const vite = spawn("npx", ["vite", "--config", configPath, "--port", "4321"], { stdio: "pipe" });
+let configPath = path.resolve("./ag.config.js");
+
+// Convert Windows backslashes to forward slashes
+if (os.platform() === "win32") {
+  configPath = configPath.replace(/\\\\/g, "/");
+}
+
+// Use npx.cmd on Windows
+const command = os.platform() === "win32" ? "npx.cmd" : "npx";
+
+// Set shell: true on Windows to fix spawn EINVAL
+const vite = spawn(
+  command,
+  ["vite", "--config", configPath, "--port", "4321"],
+  {
+    stdio: "pipe",
+    shell: os.platform() === "win32",
+  }
+);
 
 vite.stdout.on("data", (data) => {
   const str = data.toString();
@@ -388,11 +447,12 @@ vite.on("close", (code) => {
   process.exit(code);
 });
 `;
+
   fs.writeFileSync(path.join(PROJECT_DIR, "run.js"), runJsContent);
 
   console.log("\n🎉 Project created successfully!");
   console.log(`cd ${finalName}`);
-  console.log("npm run ag   # or npm start / npm run dev to launch the app");
+  console.log("npm run sg   # or npm start / npm run dev to launch the app");
   console.log("npm run build  # to build the project");
   console.log("npm run preview  # to preview the build");
 }

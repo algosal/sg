@@ -1,0 +1,70 @@
+/* Container */
+.corporate-container {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #121212;
+  color: #eee;
+  min-height: 100vh;
+  padding-top: 100px; /* desktop navbar + header */
+}
+
+/* Header */
+.corporate-header {
+  text-align: center;
+  padding: 20px 30px;
+  background-color: #121212;
+  color: #ffcc00;
+  font-size: 2rem;
+  font-weight: bold;
+  border-bottom: 1px solid #333;
+}
+
+/* Company blocks */
+.company-block {
+  border-left: 4px solid #ffcc00;
+  background-color: #1a1a1a;
+  padding: 15px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 6px rgba(255, 255, 255, 0.05);
+}
+
+.company-title {
+  color: #ffcc00;
+  font-size: 1.3rem;
+  margin-bottom: 8px;
+}
+
+.company-description {
+  font-size: 1rem;
+  line-height: 1.8;
+  margin-top: 5px;
+}
+
+.company-sub {
+  margin-top: 15px;
+  padding-left: 15px;
+}
+
+/* Main content */
+.corporate-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  text-align: left;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .corporate-container {
+    padding-top: 140px; /* mobile navbar + header height */
+  }
+
+  .corporate-header {
+    font-size: 1.7rem;
+    padding: 15px 20px;
+  }
+
+  .corporate-content {
+    padding: 20px 15px;
+    max-width: 100%;
+  }
+}
