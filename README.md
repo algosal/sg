@@ -80,5 +80,6 @@ For more information, visit **Conscious Neurons LLC**: [https://consciousneurons
 
 npx --verbose @salmansaeed/sg@latest new <AppName>
 
-so users always get the most recent version.
 ```
+
+so users always get the most recent version.
