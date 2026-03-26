@@ -9,8 +9,7 @@
   "files": [
     "bin",
     "template",
-    "README.md",
-    "LICENSE"
+    "README.md"
   ],
   "scripts": {
     "start": "node ./bin/sg.js"

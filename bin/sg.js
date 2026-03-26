@@ -14,11 +14,10 @@ import { execSync } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const args = process.argv.slice(2);
 
 /**
- * Converts a string like "my-app" or "my_app" to PascalCase.
+ * Purpose: Convert a string like "my-app" or "my_app" to PascalCase.
  */
 function toPascalCase(str = "") {
   return str
@@ -30,7 +29,7 @@ function toPascalCase(str = "") {
 }
 
 /**
- * Converts a string like "My App" or "My_App" to kebab-case.
+ * Purpose: Convert a string to kebab-case for folder/package names.
  */
 function toKebabCase(str = "") {
   return str
@@ -43,14 +42,14 @@ function toKebabCase(str = "") {
 }
 
 /**
- * Creates a valid CSS-friendly class prefix.
+ * Purpose: Convert a string into a safe CSS class prefix.
  */
 function toCssClassName(str = "") {
   return toKebabCase(str).replace(/[^a-z0-9-]/g, "");
 }
 
 /**
- * Writes a file and ensures its parent directory exists first.
+ * Purpose: Ensure parent directories exist before writing a file.
  */
 function writeFileSafe(filePath, content) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -58,7 +57,7 @@ function writeFileSafe(filePath, content) {
 }
 
 /**
- * Copies a directory recursively, skipping node_modules and .git.
+ * Purpose: Recursively copy directories and files, skipping junk folders.
  */
 function copyRecursive(src, dest) {
   if (!fs.existsSync(src)) return;
@@ -79,7 +78,7 @@ function copyRecursive(src, dest) {
 }
 
 /**
- * Prints usage help for the CLI.
+ * Purpose: Print usage help.
  */
 function printUsage() {
   console.log(`
@@ -104,7 +103,7 @@ Examples:
 }
 
 /**
- * Creates a service file inside src/services.
+ * Purpose: Create a service file in src/services.
  */
 function createService(serviceName) {
   const finalName = toPascalCase(serviceName);
@@ -130,7 +129,7 @@ export default function ${finalName}() {
 }
 
 /**
- * Creates a context file inside src/contexts.
+ * Purpose: Create a context file in src/contexts.
  */
 function createContext(contextName) {
   const finalName = toPascalCase(contextName);
@@ -156,7 +155,7 @@ export const ${finalName} = createContext(null);
 }
 
 /**
- * Creates a component folder with JSX, child JSX, and CSS.
+ * Purpose: Create a component folder with JSX, child JSX, and CSS.
  */
 function createComponent(componentName) {
   const finalName = toPascalCase(componentName);
@@ -235,8 +234,8 @@ export default ${finalName}JS;
 }
 
 /**
- * Creates a full app scaffold from the template folder and then writes
- * required project files with correct names and values.
+ * Purpose: Create a full app scaffold from the template folder and then
+ * patch key files with the correct app-specific values.
  */
 function createApp(rawAppName) {
   const projectDirName = toKebabCase(rawAppName);
@@ -253,6 +252,12 @@ function createApp(rawAppName) {
     process.exit(1);
   }
 
+  if (!fs.existsSync(templateDir)) {
+    console.error("❌ Template directory not found.");
+    console.error(`Expected template at: ${templateDir}`);
+    process.exit(1);
+  }
+
   if (fs.existsSync(projectDir)) {
     console.error(`❌ Folder already exists: ${projectDirName}`);
     process.exit(1);
@@ -260,44 +265,30 @@ function createApp(rawAppName) {
 
   fs.mkdirSync(projectDir, { recursive: true });
 
-  if (fs.existsSync(templateDir)) {
-    copyRecursive(templateDir, projectDir);
-  } else {
-    console.warn(
-      "⚠️ Template directory not found. Creating base app files only.",
-    );
-  }
+  // Copy the full template first
+  copyRecursive(templateDir, projectDir);
 
   const publicDir = path.join(projectDir, "public");
   const srcDir = path.join(projectDir, "src");
-  const templatePublicDir = path.join(templateDir, "public");
 
   fs.mkdirSync(publicDir, { recursive: true });
   fs.mkdirSync(srcDir, { recursive: true });
 
-  // Copy public assets if they exist in template/public
-  ["favicon.png", "logo.png"].forEach((file) => {
-    const srcPath = path.join(templatePublicDir, file);
-    const destPath = path.join(publicDir, file);
+  // Ensure root index.html exists by promoting template/public/index.html
+  const publicIndexPath = path.join(publicDir, "index.html");
+  const rootIndexPath = path.join(projectDir, "index.html");
 
-    if (fs.existsSync(srcPath)) {
-      fs.copyFileSync(srcPath, destPath);
-    }
-  });
+  if (fs.existsSync(publicIndexPath)) {
+    const templateIndex = fs.readFileSync(publicIndexPath, "utf8");
+    const patchedIndex = templateIndex
+      .replace(/<title>.*?<\/title>/i, `<title>${displayName}</title>`)
+      .replace(/src=["']\.\/src\/main\.jsx["']/i, 'src="/src/main.jsx"')
+      .replace(/src=["']src\/main\.jsx["']/i, 'src="/src/main.jsx"');
 
-  const manifestContent = `{
-  "name": "${displayName}",
-  "short_name": "${displayName}",
-  "start_url": ".",
-  "display": "standalone",
-  "background_color": "#0a0f24",
-  "theme_color": "#ffd700"
-}
-`;
-
-  writeFileSafe(path.join(publicDir, "manifest.json"), manifestContent);
-
-  const indexHtmlContent = `<!DOCTYPE html>
+    writeFileSafe(rootIndexPath, patchedIndex);
+    fs.unlinkSync(publicIndexPath);
+  } else if (!fs.existsSync(rootIndexPath)) {
+    const indexHtmlContent = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <!-- File: index.html -->
@@ -314,10 +305,55 @@ function createApp(rawAppName) {
   </body>
 </html>
 `;
+    writeFileSafe(rootIndexPath, indexHtmlContent);
+  }
 
-  writeFileSafe(path.join(projectDir, "index.html"), indexHtmlContent);
+  // Ensure manifest exists and has the right app name
+  const manifestPath = path.join(publicDir, "manifest.json");
+  const manifestContent = `{
+  "name": "${displayName}",
+  "short_name": "${displayName}",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0a0f24",
+  "theme_color": "#ffd700"
+}
+`;
+  writeFileSafe(manifestPath, manifestContent);
 
-  const mainJsxContent = `/**
+  // Ensure package.json is correct for the generated app
+  const generatedPkg = {
+    name: packageName,
+    version: "1.0.0",
+    private: true,
+    type: "module",
+    scripts: {
+      dev: "node run.js",
+      start: "node run.js",
+      sg: "node run.js",
+      build: "vite build",
+      preview: "vite preview",
+    },
+    dependencies: {
+      react: "^18.3.1",
+      "react-dom": "^18.3.1",
+      "react-router-dom": "^6.15.0",
+    },
+    devDependencies: {
+      vite: "^7.2.7",
+      "@vitejs/plugin-react": "^4.3.3",
+    },
+  };
+
+  writeFileSafe(
+    path.join(projectDir, "package.json"),
+    `${JSON.stringify(generatedPkg, null, 2)}\n`,
+  );
+
+  // Ensure main.jsx exists
+  const mainJsxPath = path.join(srcDir, "main.jsx");
+  if (!fs.existsSync(mainJsxPath)) {
+    const mainJsxContent = `/**
  * File: src/main.jsx
  * Purpose: Entry point for the React application. Mounts App into the root DOM node.
  */
@@ -325,7 +361,7 @@ function createApp(rawAppName) {
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
-import "./App.css";
+import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -333,10 +369,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   </React.StrictMode>
 );
 `;
+    writeFileSafe(mainJsxPath, mainJsxContent);
+  }
 
-  writeFileSafe(path.join(srcDir, "main.jsx"), mainJsxContent);
-
-  const appJsxContent = `/**
+  // Ensure App.jsx exists
+  const appJsxPath = path.join(srcDir, "App.jsx");
+  if (!fs.existsSync(appJsxPath)) {
+    const appJsxContent = `/**
  * File: src/App.jsx
  * Purpose: Main root component for the generated SG application.
  */
@@ -373,10 +412,13 @@ const App = () => {
 
 export default App;
 `;
+    writeFileSafe(appJsxPath, appJsxContent);
+  }
 
-  writeFileSafe(path.join(srcDir, "App.jsx"), appJsxContent);
-
-  const appCssContent = `/**
+  // Ensure App.css exists
+  const appCssPath = path.join(srcDir, "App.css");
+  if (!fs.existsSync(appCssPath)) {
+    const appCssContent = `/**
  * File: src/App.css
  * Purpose: Base styling for the generated SG application shell.
  */
@@ -407,38 +449,13 @@ a:hover {
   text-align: center;
 }
 `;
+    writeFileSafe(appCssPath, appCssContent);
+  }
 
-  writeFileSafe(path.join(srcDir, "App.css"), appCssContent);
-
-  const generatedPkg = {
-    name: packageName,
-    version: "1.0.0",
-    private: true,
-    type: "module",
-    scripts: {
-      dev: "node run.js",
-      start: "node run.js",
-      sg: "node run.js",
-      build: "vite build",
-      preview: "vite preview",
-    },
-    dependencies: {
-      react: "^18.3.1",
-      "react-dom": "^18.3.1",
-      "react-router-dom": "^6.28.0",
-    },
-    devDependencies: {
-      vite: "^7.2.7",
-      "@vitejs/plugin-react": "^4.3.3",
-    },
-  };
-
-  writeFileSafe(
-    path.join(projectDir, "package.json"),
-    `${JSON.stringify(generatedPkg, null, 2)}\n`,
-  );
-
-  const runJsContent = `#!/usr/bin/env node
+  // Ensure run.js exists
+  const runJsPath = path.join(projectDir, "run.js");
+  if (!fs.existsSync(runJsPath)) {
+    const runJsContent = `#!/usr/bin/env node
 
 /**
  * File: run.js
@@ -448,12 +465,13 @@ a:hover {
 import { spawn } from "child_process";
 import path from "path";
 import os from "os";
+import fs from "fs";
 
 console.log(\`
-  ███████╗ ██████╗
-██╔════╝ ██╔═══██╗
-███████╗ ██║
-╚════██║ ██║ █ ██║
+ ███████╗  ██████╗
+██╔════╝ ██╔════╝
+███████╗ ██║  ███╗
+╚════██║ ██║   ██║
 ███████║ ╚██████╔╝
 ╚══════╝  ╚═════╝
 
@@ -463,17 +481,14 @@ Built by Salman Saeed
 🔹 Starting your SG App...
 \`);
 
-let configPath = path.resolve("./ag.config.js");
-
-if (os.platform() === "win32") {
-  configPath = configPath.replace(/\\\\/g, "/");
-}
+const localConfigPath = path.resolve("./as.config.js");
+const hasLocalConfig = fs.existsSync(localConfigPath);
 
 const command = os.platform() === "win32" ? "npx.cmd" : "npx";
 const viteArgs = ["vite", "--port", "4321"];
 
-if (configPath) {
-  viteArgs.push("--config", configPath);
+if (hasLocalConfig) {
+  viteArgs.push("--config", localConfigPath);
 }
 
 const vite = spawn(command, viteArgs, {
@@ -482,17 +497,18 @@ const vite = spawn(command, viteArgs, {
 });
 
 vite.on("close", (code) => {
+  console.log(\`\\n✅ SG App stopped (exit code \${code ?? 0})\`);
   process.exit(code ?? 0);
 });
 `;
+    writeFileSafe(runJsPath, runJsContent);
+  }
 
-  writeFileSafe(path.join(projectDir, "run.js"), runJsContent);
-
-  // Add ag.config.js only if it does not already exist from the template
-  const agConfigPath = path.join(projectDir, "ag.config.js");
-  if (!fs.existsSync(agConfigPath)) {
-    const agConfigContent = `/**
- * File: ag.config.js
+  // Ensure as.config.js exists
+  const asConfigPath = path.join(projectDir, "as.config.js");
+  if (!fs.existsSync(asConfigPath)) {
+    const asConfigContent = `/**
+ * File: as.config.js
  * Purpose: Vite configuration file used by the custom SG launcher.
  */
 
@@ -503,10 +519,10 @@ export default defineConfig({
   plugins: [react()]
 });
 `;
-    writeFileSafe(agConfigPath, agConfigContent);
+    writeFileSafe(asConfigPath, asConfigContent);
   }
 
-  console.log("\\n📦 Installing dependencies...");
+  console.log("\n📦 Installing dependencies...");
   try {
     execSync("npm install", { stdio: "inherit", cwd: projectDir });
     console.log("✅ Dependencies installed successfully!");
@@ -516,7 +532,7 @@ export default defineConfig({
     );
   }
 
-  console.log("\\n🎉 Project created successfully!");
+  console.log("\n🎉 Project created successfully!");
   console.log(`cd ${projectDirName}`);
   console.log("npm run dev");
   console.log("npm run build");
@@ -524,9 +540,10 @@ export default defineConfig({
 }
 
 /**
- * Parses arguments and supports both:
+ * Purpose: Parse command arguments and support:
  *   sg new app my-app
  *   sg new my-app
+ *   sg app my-app
  */
 function parseArgs(argv) {
   const first = argv[0];
@@ -538,32 +555,26 @@ function parseArgs(argv) {
     process.exit(1);
   }
 
-  // Preferred form: sg new app my-app
   if (first === "new" && ["app", "gc", "cc", "svc", "ctx"].includes(second)) {
     return {
-      command: first,
       shortcut: second,
       name: third,
     };
   }
 
-  // Convenience alias: sg new my-app  -> sg new app my-app
   if (
     first === "new" &&
     second &&
     !["app", "gc", "cc", "svc", "ctx"].includes(second)
   ) {
     return {
-      command: "new",
       shortcut: "app",
       name: second,
     };
   }
 
-  // Optional direct form: sg app my-app
   if (["app", "gc", "cc", "svc", "ctx"].includes(first)) {
     return {
-      command: "new",
       shortcut: first,
       name: second,
     };
