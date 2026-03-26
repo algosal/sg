@@ -1,11 +1,17 @@
 {
   "name": "@salmansaeed/sg",
-  "version": "1.0.7",
-  "description": "SG CLI for scaffolding React projects, components, services, and contexts",
+  "version": "1.0.8",
+  "description": "SG CLI for scaffolding React/Vite apps, components, services, and contexts",
   "bin": {
     "sg": "bin/sg.js"
   },
   "type": "module",
+  "files": [
+    "bin",
+    "template",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "start": "node ./bin/sg.js"
   },
@@ -20,6 +26,15 @@
   ],
   "author": "Salman Saeed, Conscious Neurons LLC",
   "license": "MIT",
+  "preferGlobal": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/algosal/sg.git"
+  },
+  "homepage": "https://github.com/algosal/sg#readme",
+  "bugs": {
+    "url": "https://github.com/algosal/sg/issues"
+  },
   "dependencies": {},
   "engines": {
     "node": ">=18"

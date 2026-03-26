@@ -17,7 +17,7 @@ SG CLI comes with built-in navigation and project scaffolding, reducing setup ov
 ## Installation
 
 ```bash
-npx --verbose @salmansaeed/sg@latest new <AppName>
+npx --verbose @salmansaeed/sg@latest new app <AppName>
 ```
 
 ---
@@ -78,7 +78,7 @@ For more information, visit **Conscious Neurons LLC**: [https://consciousneurons
 
 ```bash
 
-npx --verbose @salmansaeed/sg@latest new <AppName>
+npx --verbose @salmansaeed/sg@latest new app <AppName>
 
 ```
 
