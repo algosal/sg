@@ -1,5 +1,7 @@
 # SG CLI
 
+**React Power. Angular Simplicity. Vite Speed.**
+
 🚀 **SG CLI** - Powered by **Conscious Neurons LLC**  
 Website: [https://consciousneurons.com](https://consciousneurons.com)  
 Built by Salman Saeed: [https://salmansaeed.us](https://salmansaeed.us)
@@ -8,7 +10,7 @@ Built by Salman Saeed: [https://salmansaeed.us](https://salmansaeed.us)
 
 ## About SG CLI
 
-**SG CLI** is a powerful command-line interface created by Salman Saeed. It combines the familiar folder structure and command patterns from **Angular** with the modern principles of **React** and **Vite**, providing a ready-to-use boilerplate for web applications.
+**SG CLI** is a powerful command-line interface created by Salman Saeed. It combines the familiar folder structure and command patterns from **Angular** with the modern principles of **React Power** and **Vite Speed**, providing a ready-to-use boilerplate for web applications.
 
 SG CLI comes with built-in navigation and project scaffolding, reducing setup overhead and making it ideal for developing regular applications efficiently.
 

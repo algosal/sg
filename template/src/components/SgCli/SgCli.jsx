@@ -8,7 +8,7 @@ const SgCli = () => {
       <Navbar />
 
       <header className="sgcli-header">
-        SG CLI – Streamlined React Vite Apps
+        SG CLI – Streamlined Angular React Vite Apps
       </header>
 
       <main className="sgcli-content">

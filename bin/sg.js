@@ -78,11 +78,51 @@ function copyRecursive(src, dest) {
 }
 
 /**
+ * Purpose: Make sure generator commands are run from the project root,
+ * not from inside src or any nested folder.
+ */
+function ensureProjectRootForGenerators() {
+  const cwd = process.cwd();
+  const normalized = path.normalize(cwd);
+  const parts = normalized.split(path.sep).filter(Boolean);
+
+  const packageJsonPath = path.join(cwd, "package.json");
+  const srcPath = path.join(cwd, "src");
+
+  const isInsideSrc =
+    parts[parts.length - 1] === "src" ||
+    normalized.includes(`${path.sep}src${path.sep}`);
+
+  if (isInsideSrc) {
+    console.error(
+      "❌ Run SG generator commands from the project root, not from inside src.",
+    );
+    console.error("✅ Example: run 'sg new gc MyComponent' from the app root.");
+    process.exit(1);
+  }
+
+  if (!fs.existsSync(packageJsonPath) || !fs.existsSync(srcPath)) {
+    console.error(
+      "❌ SG generator commands must be run from the project root folder.",
+    );
+    console.error(
+      "✅ Expected to find both package.json and src/ in the current directory.",
+    );
+    process.exit(1);
+  }
+}
+
+/**
  * Purpose: Print usage help.
  */
 function printUsage() {
   console.log(`
 SG CLI Usage:
+React Power.
+Angular Simplicity. 
+Vite Speed.
+
+Run generator commands from the project root folder, not from src.
 
   sg new app <app-name>
   sg new gc <name>
@@ -106,6 +146,8 @@ Examples:
  * Purpose: Create a service file in src/services.
  */
 function createService(serviceName) {
+  ensureProjectRootForGenerators();
+
   const finalName = toPascalCase(serviceName);
   const servicePath = path.join(
     process.cwd(),
@@ -132,6 +174,8 @@ export default function ${finalName}() {
  * Purpose: Create a context file in src/contexts.
  */
 function createContext(contextName) {
+  ensureProjectRootForGenerators();
+
   const finalName = toPascalCase(contextName);
   const ctxPath = path.join(
     process.cwd(),
@@ -158,6 +202,8 @@ export const ${finalName} = createContext(null);
  * Purpose: Create a component folder with JSX, child JSX, and CSS.
  */
 function createComponent(componentName) {
+  ensureProjectRootForGenerators();
+
   const finalName = toPascalCase(componentName);
   const cssClass = toCssClassName(finalName);
   const componentDir = path.join(process.cwd(), "src", "components", finalName);
@@ -174,7 +220,7 @@ import ${finalName}JS from "./${finalName}JS";
 const ${finalName} = () => {
   return (
     <div className="${cssClass}-container">
-      <h2>${finalName} Component</h2>
+      <h2>First Component</h2>
       <${finalName}JS />
     </div>
   );
@@ -265,7 +311,6 @@ function createApp(rawAppName) {
 
   fs.mkdirSync(projectDir, { recursive: true });
 
-  // Copy the full template first
   copyRecursive(templateDir, projectDir);
 
   const publicDir = path.join(projectDir, "public");
@@ -274,7 +319,6 @@ function createApp(rawAppName) {
   fs.mkdirSync(publicDir, { recursive: true });
   fs.mkdirSync(srcDir, { recursive: true });
 
-  // Ensure root index.html exists by promoting template/public/index.html
   const publicIndexPath = path.join(publicDir, "index.html");
   const rootIndexPath = path.join(projectDir, "index.html");
 
@@ -308,7 +352,6 @@ function createApp(rawAppName) {
     writeFileSafe(rootIndexPath, indexHtmlContent);
   }
 
-  // Ensure manifest exists and has the right app name
   const manifestPath = path.join(publicDir, "manifest.json");
   const manifestContent = `{
   "name": "${displayName}",
@@ -321,7 +364,6 @@ function createApp(rawAppName) {
 `;
   writeFileSafe(manifestPath, manifestContent);
 
-  // Ensure package.json is correct for the generated app
   const generatedPkg = {
     name: packageName,
     version: "1.0.0",
@@ -350,7 +392,6 @@ function createApp(rawAppName) {
     `${JSON.stringify(generatedPkg, null, 2)}\n`,
   );
 
-  // Ensure main.jsx exists
   const mainJsxPath = path.join(srcDir, "main.jsx");
   if (!fs.existsSync(mainJsxPath)) {
     const mainJsxContent = `/**
@@ -372,7 +413,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     writeFileSafe(mainJsxPath, mainJsxContent);
   }
 
-  // Ensure App.jsx exists
   const appJsxPath = path.join(srcDir, "App.jsx");
   if (!fs.existsSync(appJsxPath)) {
     const appJsxContent = `/**
@@ -388,6 +428,7 @@ const App = () => {
     <div className="app-container">
       <h1>Welcome to ${displayName}</h1>
       <p>Your SG app is ready.</p>
+      <p>Angular Simplicity. React Power.</p>
       <p>
         Powered by{" "}
         <a
@@ -415,7 +456,6 @@ export default App;
     writeFileSafe(appJsxPath, appJsxContent);
   }
 
-  // Ensure App.css exists
   const appCssPath = path.join(srcDir, "App.css");
   if (!fs.existsSync(appCssPath)) {
     const appCssContent = `/**
@@ -452,14 +492,13 @@ a:hover {
     writeFileSafe(appCssPath, appCssContent);
   }
 
-  // Ensure run.js exists
   const runJsPath = path.join(projectDir, "run.js");
   if (!fs.existsSync(runJsPath)) {
     const runJsContent = `#!/usr/bin/env node
 
 /**
  * File: run.js
- * Purpose: Starts the generated Vite app through a custom launcher on port 4321.
+ * Purpose: Launches the SG app using Vite with custom config.
  */
 
 import { spawn } from "child_process";
@@ -479,21 +518,33 @@ console.log(\`
 https://consciousneurons.com
 Built by Salman Saeed
 🔹 Starting your SG App...
+🔹 Angular Simplicity. React Power.
 \`);
 
-const localConfigPath = path.resolve("./as.config.js");
+const localConfigPath = path.resolve("./sg.config.js");
 const hasLocalConfig = fs.existsSync(localConfigPath);
 
 const command = os.platform() === "win32" ? "npx.cmd" : "npx";
-const viteArgs = ["vite", "--port", "4321"];
+const viteArgs = ["vite"];
 
 if (hasLocalConfig) {
   viteArgs.push("--config", localConfigPath);
 }
 
 const vite = spawn(command, viteArgs, {
-  stdio: "inherit",
-  shell: os.platform() === "win32"
+  stdio: "pipe",
+  shell: os.platform() === "win32",
+});
+
+vite.stdout.on("data", (data) => {
+  const str = data.toString();
+  if (!str.includes("VITE")) {
+    console.log(str);
+  }
+});
+
+vite.stderr.on("data", (data) => {
+  process.stderr.write(data);
 });
 
 vite.on("close", (code) => {
@@ -504,22 +555,31 @@ vite.on("close", (code) => {
     writeFileSafe(runJsPath, runJsContent);
   }
 
-  // Ensure as.config.js exists
-  const asConfigPath = path.join(projectDir, "as.config.js");
-  if (!fs.existsSync(asConfigPath)) {
-    const asConfigContent = `/**
- * File: as.config.js
- * Purpose: Vite configuration file used by the custom SG launcher.
+  const sgConfigPath = path.join(projectDir, "sg.config.js");
+  if (!fs.existsSync(sgConfigPath)) {
+    const sgConfigContent = `/**
+ * File: sg.config.js
+ * Purpose: Vite configuration file used by the SG launcher.
  */
 
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import path from "path";
 
 export default defineConfig({
-  plugins: [react()]
+  root: ".",
+  plugins: [react()],
+  server: { port: 4321 },
+  build: {
+    outDir: "dist",
+    rollupOptions: {
+      input: path.resolve(__dirname, "public/index.html"),
+    },
+  },
+  clearScreen: false,
 });
 `;
-    writeFileSafe(asConfigPath, asConfigContent);
+    writeFileSafe(sgConfigPath, sgConfigContent);
   }
 
   console.log("\n📦 Installing dependencies...");
@@ -533,6 +593,7 @@ export default defineConfig({
   }
 
   console.log("\n🎉 Project created successfully!");
+  console.log("React Power. Angular Simplicity. Vite Speed.");
   console.log(`cd ${projectDirName}`);
   console.log("npm run dev");
   console.log("npm run build");
