@@ -11,7 +11,6 @@ import os from "os";
 import fs from "fs";
 
 // 🔷 SG Banner
-// 🔷 SG Banner
 console.log(\`
  ███████╗  ██████╗
 ██╔════╝ ██╔════╝
