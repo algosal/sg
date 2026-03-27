@@ -667,6 +667,15 @@ Built by Salman Saeed
 🔹 Angular Simplicity.
 🔹 Vite Speed
 
+███████╗  ██████╗
+██╔════╝ ██╔════╝
+███████╗ ██║  ███╗
+╚════██║ ██║   ██║
+███████║ ╚██████╔╝
+╚══════╝  ╚═════╝
+
+by https://salmansaeed.us
+
 \`);
 
 const configPath = path.resolve("./sg.config.js");
