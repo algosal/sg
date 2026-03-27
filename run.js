@@ -11,7 +11,8 @@ import os from "os";
 import fs from "fs";
 
 // 🔷 SG Banner
-console.log(`
+// 🔷 SG Banner
+console.log(\`
  ███████╗  ██████╗
 ██╔════╝ ██╔════╝
 ███████╗ ██║  ███╗
@@ -22,21 +23,13 @@ console.log(`
 🚀 SG CLI - Powered by Conscious Neurons LLC
 https://consciousneurons.com
 Built by Salman Saeed
-🔹 Starting your SG App...
-🔹 React Power.
-🔹 Angular Simplicity.
-🔹 Vite Speed
-
 ███████╗  ██████╗
-██╔════╝ ██╔════╝
-███████╗ ██║  ███╗
-╚════██║ ██║   ██║
-███████║ ╚██████╔╝
-╚══════╝  ╚═════╝
-
-by https://salmansaeed.us
-
-`);
+██╔════╝ ██╔════╝ 🔹 Starting your SG App...
+███████╗ ██║  ███╗🔹 React Power.
+╚════██║ ██║   ██║🔹 Angular Simplicity.
+███████║ ╚██████╔╝🔹 Vite Speed
+╚══════╝  ╚═════╝ by https://salmansaeed.us
+\`);;
 
 const configPath = path.resolve("./sg.config.js");
 const hasConfig = fs.existsSync(configPath);
