@@ -1,6 +1,6 @@
 {
   "name": "@salmansaeed/sg",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "SG CLI for scaffolding React/Vite apps, components, services, and contexts",
   "bin": {
     "sg": "bin/sg.js"
