@@ -9,8 +9,9 @@
 import fs from "fs";
 import path from "path";
 import os from "os";
+import readline from "readline";
 import { fileURLToPath } from "url";
-import { execSync } from "child_process";
+import { execSync, spawn } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,15 +64,30 @@ function copyRecursive(src, dest) {
   if (!fs.existsSync(src)) return;
 
   const stat = fs.statSync(src);
+  const base = path.basename(src);
+
+  const IGNORE_DIRS = ["node_modules", ".git"];
+  const IGNORE_EXACT_FILES = [".DS_Store"];
+  const IGNORE_FILE_PREFIXES = [".env"];
 
   if (stat.isDirectory()) {
+    if (IGNORE_DIRS.includes(base)) return;
+
     fs.mkdirSync(dest, { recursive: true });
 
     for (const item of fs.readdirSync(src)) {
-      if (item === "node_modules" || item === ".git") continue;
       copyRecursive(path.join(src, item), path.join(dest, item));
     }
   } else {
+    if (
+      IGNORE_EXACT_FILES.includes(base) ||
+      IGNORE_FILE_PREFIXES.some(
+        (prefix) => base === prefix || base.startsWith(`${prefix}.`),
+      )
+    ) {
+      return;
+    }
+
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.copyFileSync(src, dest);
   }
@@ -140,6 +156,75 @@ Examples:
   sg new svc auth-service
   sg new ctx user-session
 `);
+}
+
+/**
+ * Purpose: Ask the user a yes/no question in the terminal.
+ */
+function askYesNo(question) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close();
+      const normalized = answer.trim().toLowerCase();
+      resolve(normalized === "y" || normalized === "yes");
+    });
+  });
+}
+
+/**
+ * Purpose: Open the browser to the local dev server URL.
+ */
+function openBrowser(url) {
+  const platform = os.platform();
+
+  if (platform === "darwin") {
+    const child = spawn("open", [url], {
+      stdio: "ignore",
+      detached: true,
+    });
+    child.unref();
+  } else if (platform === "win32") {
+    const child = spawn("cmd", ["/c", "start", "", url], {
+      stdio: "ignore",
+      detached: true,
+      shell: true,
+    });
+    child.unref();
+  } else {
+    const child = spawn("xdg-open", [url], {
+      stdio: "ignore",
+      detached: true,
+    });
+    child.unref();
+  }
+}
+
+/**
+ * Purpose: Start the generated app in dev mode.
+ */
+function startGeneratedApp(projectDir, shouldOpenBrowser) {
+  const command = os.platform() === "win32" ? "npm.cmd" : "npm";
+
+  const devProcess = spawn(command, ["run", "dev"], {
+    cwd: projectDir,
+    stdio: "inherit",
+    shell: os.platform() === "win32",
+  });
+
+  if (shouldOpenBrowser) {
+    setTimeout(() => {
+      openBrowser("http://localhost:4321");
+    }, 2500);
+  }
+
+  devProcess.on("close", (code) => {
+    console.log(`\n✅ Dev server stopped (exit code ${code ?? 0})`);
+  });
 }
 
 /**
@@ -283,7 +368,7 @@ export default ${finalName}JS;
  * Purpose: Create a full app scaffold from the template folder and then
  * patch key files with the correct app-specific values.
  */
-function createApp(rawAppName) {
+async function createApp(rawAppName) {
   const projectDirName = toKebabCase(rawAppName);
   const displayName = toPascalCase(rawAppName);
   const packageName = toKebabCase(rawAppName);
@@ -312,6 +397,65 @@ function createApp(rawAppName) {
   fs.mkdirSync(projectDir, { recursive: true });
 
   copyRecursive(templateDir, projectDir);
+
+  // Ensure .gitignore exists (fallback in case template misses dotfiles)
+  const gitignorePath = path.join(projectDir, ".gitignore");
+
+  if (!fs.existsSync(gitignorePath)) {
+    const gitignoreContent = `# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build output
+dist/
+build/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Coverage
+coverage/
+
+# Cache
+.cache/
+.parcel-cache/
+.vite/
+
+# Optional: lock files (keep if you want reproducible builds)
+# package-lock.json
+# yarn.lock
+
+# Misc
+*.tgz
+`;
+
+    writeFileSafe(gitignorePath, gitignoreContent);
+  }
 
   const publicDir = path.join(projectDir, "public");
   const srcDir = path.join(projectDir, "src");
@@ -506,6 +650,7 @@ import path from "path";
 import os from "os";
 import fs from "fs";
 
+// 🔷 SG Banner
 console.log(\`
  ███████╗  ██████╗
 ██╔════╝ ██╔════╝
@@ -518,17 +663,20 @@ console.log(\`
 https://consciousneurons.com
 Built by Salman Saeed
 🔹 Starting your SG App...
-🔹 Angular Simplicity. React Power.
+🔹 React Power.
+🔹 Angular Simplicity.
+🔹 Vite Speed
+
 \`);
 
-const localConfigPath = path.resolve("./sg.config.js");
-const hasLocalConfig = fs.existsSync(localConfigPath);
+const configPath = path.resolve("./sg.config.js");
+const hasConfig = fs.existsSync(configPath);
 
 const command = os.platform() === "win32" ? "npx.cmd" : "npx";
 const viteArgs = ["vite"];
 
-if (hasLocalConfig) {
-  viteArgs.push("--config", localConfigPath);
+if (hasConfig) {
+  viteArgs.push("--config", configPath);
 }
 
 const vite = spawn(command, viteArgs, {
@@ -559,22 +707,20 @@ vite.on("close", (code) => {
   if (!fs.existsSync(sgConfigPath)) {
     const sgConfigContent = `/**
  * File: sg.config.js
- * Purpose: Vite configuration file used by the SG launcher.
+ * Purpose: Vite configuration for SG-generated apps.
  */
 
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import path from "path";
 
 export default defineConfig({
   root: ".",
   plugins: [react()],
-  server: { port: 4321 },
+  server: {
+    port: 4321,
+  },
   build: {
     outDir: "dist",
-    rollupOptions: {
-      input: path.resolve(__dirname, "public/index.html"),
-    },
   },
   clearScreen: false,
 });
@@ -583,8 +729,11 @@ export default defineConfig({
   }
 
   console.log("\n📦 Installing dependencies...");
+  let installSucceeded = false;
+
   try {
     execSync("npm install", { stdio: "inherit", cwd: projectDir });
+    installSucceeded = true;
     console.log("✅ Dependencies installed successfully!");
   } catch {
     console.error(
@@ -598,6 +747,19 @@ export default defineConfig({
   console.log("npm run dev");
   console.log("npm run build");
   console.log("npm run preview");
+
+  if (installSucceeded) {
+    const shouldStart = await askYesNo("\n🚀 Auto start the app now? (y/n): ");
+
+    if (shouldStart) {
+      const shouldOpen = await askYesNo(
+        "🌐 Open in browser automatically? (y/n): ",
+      );
+
+      console.log(`\n▶️ Starting app in ${projectDirName}...\n`);
+      startGeneratedApp(projectDir, shouldOpen);
+    }
+  }
 }
 
 /**
@@ -647,42 +809,49 @@ function parseArgs(argv) {
 
 const { shortcut, name } = parseArgs(args);
 
-switch (shortcut) {
-  case "svc":
-    if (!name) {
-      console.error("❌ Please provide a service name.");
-      process.exit(1);
-    }
-    createService(name);
-    break;
+async function main() {
+  switch (shortcut) {
+    case "svc":
+      if (!name) {
+        console.error("❌ Please provide a service name.");
+        process.exit(1);
+      }
+      createService(name);
+      break;
 
-  case "ctx":
-    if (!name) {
-      console.error("❌ Please provide a context name.");
-      process.exit(1);
-    }
-    createContext(name);
-    break;
+    case "ctx":
+      if (!name) {
+        console.error("❌ Please provide a context name.");
+        process.exit(1);
+      }
+      createContext(name);
+      break;
 
-  case "gc":
-  case "cc":
-    if (!name) {
-      console.error("❌ Please provide a component name.");
-      process.exit(1);
-    }
-    createComponent(name);
-    break;
+    case "gc":
+    case "cc":
+      if (!name) {
+        console.error("❌ Please provide a component name.");
+        process.exit(1);
+      }
+      createComponent(name);
+      break;
 
-  case "app":
-    if (!name) {
-      console.error("❌ Please provide an app name.");
-      process.exit(1);
-    }
-    createApp(name);
-    break;
+    case "app":
+      if (!name) {
+        console.error("❌ Please provide an app name.");
+        process.exit(1);
+      }
+      await createApp(name);
+      break;
 
-  default:
-    console.error("❌ Unknown shortcut.");
-    printUsage();
-    process.exit(1);
+    default:
+      console.error("❌ Unknown shortcut.");
+      printUsage();
+      process.exit(1);
+  }
 }
+
+main().catch((err) => {
+  console.error("❌ Unexpected error:", err);
+  process.exit(1);
+});
