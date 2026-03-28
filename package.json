@@ -34,7 +34,6 @@
   "bugs": {
     "url": "https://github.com/algosal/sg/issues"
   },
-  "dependencies": {},
   "engines": {
     "node": ">=18"
   }
